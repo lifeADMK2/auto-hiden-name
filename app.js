@@ -20,18 +20,16 @@
   
 async function makeWorker() {
   if (!window.Tesseract) {
-    throw new Error(
-      'Không tải được Tesseract.js. Hãy kiểm tra kết nối Internet.'
-    );
+    throw new Error("Không tải được thư viện Tesseract.js");
   }
 
-  return Tesseract.createWorker('eng', 1, {
+  return await Tesseract.createWorker("eng", 1, {
     workerPath:
-      'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+      "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
     corePath:
-      'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
+      "https://cdn.jsdelivr.net/npm/tesseract.js-core@5",
     langPath:
-      'https://tessdata.projectnaptha.com/4.0.0',
+      "https://tessdata.projectnaptha.com/4.0.0",
     workerBlobURL: true
   });
 }
