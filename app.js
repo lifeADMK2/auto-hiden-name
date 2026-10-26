@@ -17,20 +17,25 @@
   }
 
   // VER 1.1: Dùng Worker được lưu cùng website.
-  async function makeWorker() {
-    if (!window.Tesseract) {
-      throw new Error(
-        'Không tải được thư viện OCR. Hãy kiểm tra Internet hoặc CDN.'
-      );
-    }
-
-    return Tesseract.createWorker('eng', 1, {
-      workerPath: './worker.min.js',
-      corePath: 'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
-      langPath: 'https://tessdata.projectnaptha.com/4.0.0',
-      workerBlobURL: false
-    });
+  
+async function makeWorker() {
+  if (!window.Tesseract) {
+    throw new Error(
+      'Không tải được Tesseract.js. Hãy kiểm tra kết nối Internet.'
+    );
   }
+
+  return Tesseract.createWorker('eng', 1, {
+    workerPath:
+      'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+    corePath:
+      'https://cdn.jsdelivr.net/npm/tesseract.js-core@5.1.1',
+    langPath:
+      'https://tessdata.projectnaptha.com/4.0.0',
+    workerBlobURL: true
+  });
+}
+
 
   function output(it) {
     const c = document.createElement('canvas');
