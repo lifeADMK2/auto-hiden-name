@@ -29,8 +29,8 @@ async function makeWorker() {
       "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
     corePath:
       "https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0",
-    langPath:
-      "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/",
+    langPath: 
+      "https://tessdata.projectnaptha.com/4.0.0",
     workerBlobURL: true,
     logger: m => {
       if (m.status) {
