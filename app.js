@@ -16,15 +16,26 @@
     $('clearAll').disabled = busy || !items.length;
   }
 
-  // VER 1.1: Dùng Worker được lưu cùng website.
+  // VER 1.2: Dùng Worker được lưu cùng website.
   
 async function makeWorker() {
+  if (!window.Tesseract) {
+    throw new Error("Không tải được Tesseract.js");
+  }
+
   return await Tesseract.createWorker("eng", 1, {
     workerPath:
       "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
-    langPath:
-      "https://tessdata.projectnaptha.com/4.0.0",
-    workerBlobURL: false
+    workerBlobURL: true,
+    logger: m => {
+      if (m.status) {
+        document.getElementById("status").textContent =
+          "OCR: " + m.status +
+          (m.progress != null
+            ? " " + Math.round(m.progress * 100) + "%"
+            : "");
+      }
+    }
   });
 }
 
