@@ -19,18 +19,12 @@
   // VER 1.1: Dùng Worker được lưu cùng website.
   
 async function makeWorker() {
-  if (!window.Tesseract) {
-    throw new Error("Không tải được thư viện Tesseract.js");
-  }
-
   return await Tesseract.createWorker("eng", 1, {
     workerPath:
       "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
-    corePath:
-      "https://cdn.jsdelivr.net/npm/tesseract.js-core@5",
     langPath:
       "https://tessdata.projectnaptha.com/4.0.0",
-    workerBlobURL: true
+    workerBlobURL: false
   });
 }
 
