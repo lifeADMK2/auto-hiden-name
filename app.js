@@ -16,8 +16,9 @@
     $('clearAll').disabled = busy || !items.length;
   }
 
-  // VER 1.2: Dùng Worker được lưu cùng website.
+  // VER 1.3: Dùng Worker được lưu cùng website.
   
+async function makeWorker() {
 async function makeWorker() {
   if (!window.Tesseract) {
     throw new Error("Không tải được thư viện Tesseract.js");
@@ -29,21 +30,21 @@ async function makeWorker() {
     corePath:
       "https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0",
     langPath:
-      "https://tessdata.projectnaptha.com/4.0.0",
+      "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/",
     workerBlobURL: true,
     logger: m => {
       if (m.status) {
-        const status = document.getElementById("status");
-        if (status) {
-          status.textContent =
-            "OCR: " + m.status +
-            (m.progress != null
-              ? " " + Math.round(m.progress * 100) + "%"
-              : "");
-        }
+        say(
+          "OCR: " + m.status +
+          (m.progress != null
+            ? " " + Math.round(m.progress * 100) + "%"
+            : "")
+        );
       }
     },
-    errorHandler: err => console.error("Tesseract Worker:", err)
+    errorHandler: err => {
+      console.error("Tesseract Worker error:", err);
+    }
   });
 }
 
