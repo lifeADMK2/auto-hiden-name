@@ -16,7 +16,7 @@
     $('clearAll').disabled = busy || !items.length;
   }
 
-  // VER 1.3: Dùng Worker được lưu cùng website.
+  // VER 1.53: Dùng Worker được lưu cùng website.
   
 async function makeWorker() {
 async function makeWorker() {
