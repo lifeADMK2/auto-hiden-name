@@ -6,49 +6,46 @@
   let items = [];
   let busy = false;
 
-  const say = t => $('status').textContent = t;
-  const fx = () => $('effect').value;
-  const strength = () => +$('strength').value;
+  const say = t => {
+    if ($('status')) $('status').textContent = t;
+  };
+
+  const fx = () => $('effect')?.value || 'blur';
+  const strength = () => +($('strength')?.value || 12);
 
   function controls() {
-    $('autoAll').disabled = busy || !items.length;
-    $('zipAll').disabled = busy || !items.length;
-    $('clearAll').disabled = busy || !items.length;
+    if ($('autoAll')) $('autoAll').disabled = busy || !items.length;
+    if ($('zipAll')) $('zipAll').disabled = busy || !items.length;
+    if ($('clearAll')) $('clearAll').disabled = busy || !items.length;
   }
 
-  // VER 1.53: Dùng Worker được lưu cùng website.
-  
-async function makeWorker() {
-async function makeWorker() {
-  if (!window.Tesseract) {
-    throw new Error("Không tải được thư viện Tesseract.js");
-  }
-
-  return await Tesseract.createWorker("eng", 1, {
-    workerPath:
-      "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js",
-    corePath:
-      "https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0",
-    langPath: 
-      "https://tessdata.projectnaptha.com/4.0.0",
-    workerBlobURL: true,
-    logger: m => {
-      if (m.status) {
-        say(
-          "OCR: " + m.status +
-          (m.progress != null
-            ? " " + Math.round(m.progress * 100) + "%"
-            : "")
-        );
-      }
-    },
-    errorHandler: err => {
-      console.error("Tesseract Worker error:", err);
+  // OCR Worker
+  async function makeWorker() {
+    if (!window.Tesseract) {
+      throw new Error('Không tải được Tesseract.js. Kiểm tra index.html và Internet.');
     }
-  });
-}
 
+    return await Tesseract.createWorker('eng', 1, {
+      workerPath:
+        'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+      corePath:
+        'https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0',
+      langPath:
+        'https://tessdata.projectnaptha.com/4.0.0',
+      workerBlobURL: true,
+      logger: m => {
+        if (m.status) {
+          say('OCR: ' + m.status +
+            (m.progress != null
+              ? ' ' + Math.round(m.progress * 100) + '%'
+              : ''));
+        }
+      },
+      errorHandler: err => console.error('Tesseract Worker:', err)
+    });
+  }
 
+  // Tạo ảnh đã che
   function output(it) {
     const c = document.createElement('canvas');
     c.width = it.img.naturalWidth;
@@ -82,13 +79,11 @@ async function makeWorker() {
 
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(
-          small,
-          0, 0, small.width, small.height,
+          small, 0, 0, small.width, small.height,
           x, y, w, h
         );
         ctx.imageSmoothingEnabled = true;
       } else {
-        // Tạo vùng lớn hơn để làm mờ không bị viền sắc.
         const pad = Math.max(8, r.strength * 2);
         const left = Math.max(0, x - pad);
         const top = Math.max(0, y - pad);
@@ -101,7 +96,6 @@ async function makeWorker() {
 
         const pctx = patch.getContext('2d');
         pctx.filter = `blur(${Math.max(2, r.strength)}px)`;
-
         pctx.drawImage(
           c,
           left, top, patch.width, patch.height,
@@ -121,6 +115,7 @@ async function makeWorker() {
     it.ctx.drawImage(it.output, 0, 0);
   }
 
+  // Thẻ ảnh
   function card(it) {
     it.el = document.createElement('section');
     it.el.className = 'card';
@@ -136,7 +131,7 @@ async function makeWorker() {
 
     it.note = document.createElement('div');
     it.note.className = 'small';
-    it.note.textContent = 'Chưa xử lý';
+    it.note.textContent = 'Đã tải ảnh, chưa xử lý';
 
     const actions = document.createElement('div');
     actions.className = 'actions';
@@ -160,36 +155,71 @@ async function makeWorker() {
     redraw(it);
   }
 
-  $('files').onchange = e => {
-    [...e.target.files]
-      .filter(f => f.type.startsWith('image/'))
-      .forEach(file => {
-        const url = URL.createObjectURL(file);
-        const img = new Image();
+  // Đọc ảnh chắc chắn trước khi đưa vào gallery
+  async function loadImage(file) {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
 
-        img.onload = () => {
-          const it = {
-            file,
-            img,
-            regions: []
-          };
+    try {
+      img.src = url;
+      await img.decode();
 
-          items.push(it);
-          card(it);
-          say(`Đã tải ${items.length} ảnh.`);
-          controls();
-          URL.revokeObjectURL(url);
-        };
+      if (!img.naturalWidth || !img.naturalHeight) {
+        throw new Error('Kích thước ảnh không hợp lệ');
+      }
 
-        img.onerror = () => {
-          URL.revokeObjectURL(url);
-          say('Không mở được ảnh: ' + file.name);
-        };
+      return img;
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  }
 
-        img.src = url;
-      });
-  };
+  // Chọn và tải ảnh — hỗ trợ trình duyệt điện thoại
+  $('files').addEventListener('change', async e => {
+    const files = Array.from(e.target.files || [])
+      .filter(file => file.type.startsWith('image/'));
 
+    if (!files.length) {
+      say('Không có ảnh hợp lệ. Hãy chọn JPG, PNG hoặc WEBP.');
+      return;
+    }
+
+    let loaded = 0;
+    let failed = 0;
+
+    say(`Đang tải ảnh: 0/${files.length}`);
+
+    for (const file of files) {
+      try {
+        const img = await loadImage(file);
+        const it = { file, img, regions: [] };
+
+        items.push(it);
+        card(it);
+        loaded++;
+        controls();
+
+        say(`Đã tải ${loaded}/${files.length} ảnh.`);
+      } catch (err) {
+        failed++;
+        console.error('Lỗi đọc ảnh:', file.name, err);
+        say(`Không đọc được "${file.name}": ${err.message || err}`);
+      }
+    }
+
+    if (loaded > 0) {
+      say(`Đã tải ${loaded}/${files.length} ảnh` +
+        (failed ? `; lỗi ${failed} ảnh.` : '.'));
+    } else {
+      say('Không tải được ảnh. Hãy thử ảnh JPG hoặc PNG khác.');
+    }
+
+    controls();
+    // Cho phép chọn lại cùng file
+    e.target.value = '';
+  });
+
+  // Tìm chữ Trading with và che dải ngang
   async function one(it, worker) {
     let own = false;
 
@@ -202,7 +232,6 @@ async function makeWorker() {
       }
 
       const result = await worker.recognize(it.img);
-
       const words = (result.data.words || [])
         .filter(w => w.text && w.confidence > 15);
 
@@ -211,36 +240,22 @@ async function makeWorker() {
       for (let i = 0; i < words.length && !hit; i++) {
         const first = words[i];
 
-        if (
-          first.text.toLowerCase().replace(/[^a-z]/g, '') !==
-          'trading'
-        ) {
+        if (first.text.toLowerCase().replace(/[^a-z]/g, '') !== 'trading') {
           continue;
         }
 
-        for (
-          let j = i + 1;
-          j < Math.min(i + 6, words.length);
-          j++
-        ) {
+        for (let j = i + 1; j < Math.min(i + 6, words.length); j++) {
           const second = words[j];
 
-          if (
-            second.text.toLowerCase().replace(/[^a-z]/g, '') !==
-            'with'
-          ) {
+          if (second.text.toLowerCase().replace(/[^a-z]/g, '') !== 'with') {
             continue;
           }
 
           const a = first.bbox;
           const b = second.bbox;
-
           const centerA = (a.y0 + a.y1) / 2;
           const centerB = (b.y0 + b.y1) / 2;
-          const height = Math.max(
-            a.y1 - a.y0,
-            b.y1 - b.y0
-          );
+          const height = Math.max(a.y1 - a.y0, b.y1 - b.y0);
 
           if (Math.abs(centerA - centerB) < height) {
             hit = {
@@ -257,25 +272,18 @@ async function makeWorker() {
         return false;
       }
 
-      // Che một dải ngang toàn chiều rộng ảnh.
       const margin = Math.max(
         8,
         Math.round((hit.bottom - hit.top) * 0.65)
       );
 
-      const y = Math.max(
-        0,
-        Math.floor(hit.top - margin)
-      );
-
+      const y = Math.max(0, Math.floor(hit.top - margin));
       const bottom = Math.min(
         it.img.naturalHeight,
         Math.ceil(hit.bottom + margin)
       );
 
-      // Bỏ vùng tự động cũ để tránh chồng nhiều lớp.
       it.regions = it.regions.filter(r => !r.auto);
-
       it.regions.push({
         x: 0,
         y,
@@ -287,13 +295,11 @@ async function makeWorker() {
       });
 
       redraw(it);
-
-      it.note.textContent =
-        `Đã che toàn chiều ngang: y=${y}–${bottom}`;
-
+      it.note.textContent = `Đã che dải ngang y=${y}–${bottom}`;
       return true;
     } catch (err) {
-      it.note.textContent = 'Lỗi: ' + err.message;
+      console.error('Lỗi OCR:', err);
+      it.note.textContent = 'Lỗi: ' + (err.message || err);
       return false;
     } finally {
       if (own && worker) {
@@ -304,39 +310,28 @@ async function makeWorker() {
     }
   }
 
+  // Tự tìm trên tất cả ảnh
   $('autoAll').onclick = async () => {
     if (busy || !items.length) return;
 
     busy = true;
     controls();
-
     let worker;
 
     try {
       worker = await makeWorker();
-
       let success = 0;
 
       for (let i = 0; i < items.length; i++) {
-        say(
-          `Đang xử lý ${i + 1}/${items.length}: ` +
-          items[i].file.name
-        );
-
-        if (await one(items[i], worker)) {
-          success++;
-        }
+        say(`Đang xử lý ${i + 1}/${items.length}: ${items[i].file.name}`);
+        if (await one(items[i], worker)) success++;
       }
 
-      say(
-        `Hoàn tất: tìm thấy Trading with ở ` +
-        `${success}/${items.length} ảnh.`
-      );
+      say(`Hoàn tất: tìm thấy Trading with ở ${success}/${items.length} ảnh.`);
     } catch (err) {
-      say(
-        'Lỗi OCR: ' + err.message +
-        '. Hãy kiểm tra kết nối Internet và tệp Worker.'
-      );
+      console.error('Lỗi khởi tạo OCR:', err);
+      say('Lỗi OCR: ' + (err.message || err) +
+        '. Kiểm tra kết nối Internet.');
     } finally {
       if (worker) {
         try {
@@ -349,66 +344,52 @@ async function makeWorker() {
     }
   };
 
+  // Tải một ảnh
   function download(it) {
-    redraw(it);
+    try {
+      redraw(it);
 
-    it.output.toBlob(blob => {
-      if (!blob) {
-        say('Không tạo được ảnh.');
-        return;
-      }
+      it.output.toBlob(blob => {
+        if (!blob) {
+          say('Không tạo được ảnh.');
+          return;
+        }
 
-      const a = document.createElement('a');
-      const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
 
-      a.href = url;
-      a.download =
-        it.file.name.replace(/\.[^.]+$/, '') +
-        '_hidden.png';
+        a.href = url;
+        a.download = it.file.name.replace(/\.[^.]+$/, '') + '_hidden.png';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
 
-      a.click();
-
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-    }, 'image/png');
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        say('Đã xuất ảnh.');
+      }, 'image/png');
+    } catch (err) {
+      say('Lỗi xuất ảnh: ' + (err.message || err));
+    }
   }
 
+  // Chọn vùng thủ công
   function selectRegion(it) {
     const box = document.createElement('div');
     box.className = 'card';
 
     const msg = document.createElement('p');
-    msg.textContent = 'Kéo chuột để chọn dải ngang cần che.';
+    msg.textContent = 'Kéo để chọn vùng cần che.';
 
     const c = document.createElement('canvas');
     c.width = it.img.naturalWidth;
     c.height = it.img.naturalHeight;
     c.style.width = '100%';
+    c.style.height = 'auto';
     c.style.touchAction = 'none';
 
     const ctx = c.getContext('2d');
-
     let start = null;
     let selected = null;
-
-    function paint() {
-      ctx.clearRect(0, 0, c.width, c.height);
-      ctx.drawImage(it.output || it.img, 0, 0);
-
-      if (selected) {
-        ctx.strokeStyle = '#00e5ff';
-        ctx.lineWidth = 4;
-        ctx.setLineDash([8, 5]);
-
-        ctx.strokeRect(
-          selected.x,
-          selected.y,
-          selected.w,
-          selected.h
-        );
-
-        ctx.setLineDash([]);
-      }
-    }
 
     box.append(msg, c);
 
@@ -423,39 +404,45 @@ async function makeWorker() {
 
     row.append(apply, cancel);
     box.append(row);
-
     it.el.after(box);
+
+    function paint() {
+      ctx.clearRect(0, 0, c.width, c.height);
+      ctx.drawImage(it.output || it.img, 0, 0);
+
+      if (selected) {
+        ctx.strokeStyle = '#00e5ff';
+        ctx.lineWidth = 4;
+        ctx.setLineDash([8, 5]);
+        ctx.strokeRect(
+          selected.x, selected.y,
+          selected.w, selected.h
+        );
+        ctx.setLineDash([]);
+      }
+    }
+
     paint();
 
     const position = e => {
       const rect = c.getBoundingClientRect();
-
-      const scaleX = c.width / rect.width;
-      const scaleY = c.height / rect.height;
-
       return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY
+        x: Math.max(0, Math.min(c.width,
+          (e.clientX - rect.left) * c.width / rect.width)),
+        y: Math.max(0, Math.min(c.height,
+          (e.clientY - rect.top) * c.height / rect.height))
       };
     };
 
     c.onpointerdown = e => {
       start = position(e);
-
-      selected = {
-        x: start.x,
-        y: start.y,
-        w: 0,
-        h: 0
-      };
-
+      selected = { x: start.x, y: start.y, w: 0, h: 0 };
       c.setPointerCapture(e.pointerId);
       paint();
     };
 
     c.onpointermove = e => {
       if (!start) return;
-
       const p = position(e);
 
       selected = {
@@ -473,11 +460,7 @@ async function makeWorker() {
     };
 
     apply.onclick = () => {
-      if (
-        !selected ||
-        selected.w < 2 ||
-        selected.h < 2
-      ) {
+      if (!selected || selected.w < 2 || selected.h < 2) {
         msg.textContent = 'Hãy chọn vùng trước.';
         return;
       }
@@ -496,56 +479,60 @@ async function makeWorker() {
     cancel.onclick = () => box.remove();
   }
 
+  // Tải tất cả ảnh thành ZIP
   $('zipAll').onclick = async () => {
     if (!window.JSZip) {
-      say('Không tải được JSZip. Hãy kiểm tra Internet.');
+      say('Không tải được JSZip. Kiểm tra Internet.');
+      return;
+    }
+
+    if (!items.length) {
+      say('Chưa có ảnh để xuất.');
       return;
     }
 
     try {
       say('Đang tạo ZIP...');
-
       const zip = new JSZip();
 
-      items.forEach(it => {
+      for (const it of items) {
         redraw(it);
 
-        const data = it.output
-          .toDataURL('image/png')
-          .split(',')[1];
+        const blob = await new Promise(resolve =>
+          it.output.toBlob(resolve, 'image/png')
+        );
+
+        if (!blob) throw new Error('Không xuất được ' + it.file.name);
 
         zip.file(
-          it.file.name.replace(/\.[^.]+$/, '') +
-            '_hidden.png',
-          data,
-          { base64: true }
+          it.file.name.replace(/\.[^.]+$/, '') + '_hidden.png',
+          blob
         );
-      });
+      }
 
-      const blob = await zip.generateAsync({
-        type: 'blob'
-      });
-
+      const blob = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
 
       a.href = url;
       a.download = 'roblox_hidden_images.zip';
+      document.body.appendChild(a);
       a.click();
+      a.remove();
 
       setTimeout(() => URL.revokeObjectURL(url), 2000);
-
       say('Đã tạo ZIP ảnh.');
     } catch (err) {
-      say('Lỗi tạo ZIP: ' + err.message);
+      console.error('Lỗi ZIP:', err);
+      say('Lỗi tạo ZIP: ' + (err.message || err));
     }
   };
 
+  // Xóa danh sách
   $('clearAll').onclick = () => {
     items = [];
     gallery.replaceChildren();
     $('files').value = '';
-
     say('Đã xóa danh sách ảnh.');
     controls();
   };
