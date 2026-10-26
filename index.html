@@ -2,50 +2,153 @@
 <!doctype html>
 <html lang="vi">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Roblox Trading Hider 1.0</title>
-<style>
-body{margin:0;background:#101217;color:#f4f5f7;font:16px system-ui}
-main{max-width:1150px;margin:auto;padding:20px}
-p{color:#bac2d0}
-.bar,.actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:12px 0}
-button,input,select{background:#252a35;color:white;border:1px solid #444b5b;border-radius:8px;padding:9px}
-button{cursor:pointer}
-button:disabled{opacity:.4}
-#gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
-.card{background:#191d26;border:1px solid #303542;border-radius:12px;padding:10px;min-width:0}
-.card canvas{width:100%;height:auto;display:block;background:#08090c;border-radius:6px}
-.name{overflow-wrap:anywhere;font-size:14px;margin:7px 0}
-.small{font-size:13px;color:#b6c0d0}
-#status{color:#9fb7ff;min-height:24px}
-</style>
-</head>
-<body>
-<main>
-<h1>Roblox Trading Hider</h1>
-<p>Chọn ảnh, tìm chữ Trading with và làm mờ toàn bộ dải ngang.</p>
-<div class="bar">
-<input id="files" type="file" accept="image/*" multiple>
-<button id="autoAll" disabled>Tự tìm và che tất cả</button>
-<label>Hiệu ứng
-<select id="effect">
-<option value="blur">Làm mờ</option>
-<option value="black">Che đen</option>
-<option value="pixel">Pixel hóa</option>
-</select>
-</label>
-<label>Mức <input id="strength" type="range" min="4" max="50" value="18"></label>
-<button id="zipAll" disabled>Tải tất cả ZIP</button>
-<button id="clearAll" disabled>Xóa danh sách</button>
-</div>
-<div id="status">Chưa chọn ảnh.</div>
-<div id="gallery"></div>
-<p class="small">OCR cần Internet để tải thư viện lần đầu. Ảnh được xử lý ngay trong trình duyệt.</p>
-</main>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roblox Trading Hider VER 1.1</title>
 
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<script src="app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #101217;
+      color: #f4f5f7;
+      font: 16px system-ui;
+    }
+
+    main {
+      max-width: 1150px;
+      margin: auto;
+      padding: 20px;
+    }
+
+    p {
+      color: #bac2d0;
+    }
+
+    .bar,
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      align-items: center;
+      margin: 12px 0;
+    }
+
+    button,
+    input,
+    select {
+      background: #252a35;
+      color: white;
+      border: 1px solid #444b5b;
+      border-radius: 8px;
+      padding: 9px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    #gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+
+    .card {
+      background: #191d26;
+      border: 1px solid #303542;
+      border-radius: 12px;
+      padding: 10px;
+      min-width: 0;
+    }
+
+    .card canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #08090c;
+      border-radius: 6px;
+    }
+
+    .name {
+      overflow-wrap: anywhere;
+      font-size: 14px;
+      margin: 7px 0;
+    }
+
+    .small {
+      font-size: 13px;
+      color: #b6c0d0;
+    }
+
+    #status {
+      color: #9fb7ff;
+      min-height: 24px;
+    }
+
+    .ver {
+      display: inline-block;
+      margin-left: 8px;
+      padding: 4px 8px;
+      border: 1px solid #444b5b;
+      border-radius: 6px;
+      color: #9fb7ff;
+      font-size: 12px;
+      font-weight: 600;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>
+      Roblox Trading Hider
+      <span class="ver">VER 1.1</span>
+    </h1>
+
+    <p>Chọn ảnh, tìm chữ Trading with và làm mờ toàn bộ dải ngang.</p>
+
+    <div class="bar">
+      <input id="files" type="file" accept="image/*" multiple>
+
+      <button id="autoAll" disabled>
+        Tự tìm và che tất cả
+      </button>
+
+      <label>
+        Hiệu ứng
+        <select id="effect">
+          <option value="blur">Làm mờ</option>
+          <option value="black">Che đen</option>
+          <option value="pixel">Pixel hóa</option>
+        </select>
+      </label>
+
+      <label>
+        Mức
+        <input id="strength" type="range" min="4" max="50" value="18">
+      </label>
+
+      <button id="zipAll" disabled>Tải tất cả ZIP</button>
+      <button id="clearAll" disabled>Xóa danh sách</button>
+    </div>
+
+    <div id="status">Chưa chọn ảnh.</div>
+    <div id="gallery"></div>
+
+    <p class="small">
+      VER 1.1 · OCR cần Internet để tải thư viện lần đầu.
+      Ảnh được xử lý ngay trong trình duyệt.
+    </p>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
