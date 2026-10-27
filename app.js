@@ -226,7 +226,7 @@ return await Tesseract.createWorker('eng', 1, {
         own = true;
       }
 
-      const result = await worker.recognize(it.img);
+      const result = await worker.recognize(it.file);
       const words = (result.data.words || [])
         .filter(w => w.text && w.confidence > 15);
 
