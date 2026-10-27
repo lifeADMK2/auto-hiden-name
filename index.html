@@ -125,6 +125,7 @@
           <option value="blur">Làm mờ</option>
           <option value="black">Che đen</option>
           <option value="pixel">Pixel hóa</option>
+          <option value="text">Chữ</option>
         </select>
       </label>
 
@@ -134,8 +135,18 @@
       </label>
 
       <label>
+        Chữ che vùng
+        <input id="coverText" type="text" placeholder="Nhập chữ che vùng" style="min-width:160px">
+      </label>
+
+      <label>
         Watermark
         <input id="watermarkText" type="text" placeholder="Nhập chữ watermark" style="min-width:160px">
+      </label>
+
+      <label>
+        Cỡ watermark
+        <input id="watermarkSize" type="range" min="10" max="80" value="28">
       </label>
 
       <button id="zipAll" disabled>Tải tất cả ZIP</button>
