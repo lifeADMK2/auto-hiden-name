@@ -1,9 +1,10 @@
 <!doctype html>
 <html lang="vi">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Roblox Trading Hider VER 1.5</title>
+  <title>Life tool (hiden user)</title>
 
   <style>
     body {
@@ -23,12 +24,16 @@
       color: #bac2d0;
     }
 
-    .bar,
+    .bar {
+      position: absolute;
+      display: block;
+      margin: 12px 0;
+      min-height: 700px;
+    }
+
     .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 9px;
-      align-items: center;
+      position: absolute;
+      display: block;
       margin: 12px 0;
     }
 
@@ -100,14 +105,209 @@
       font-weight: 600;
       vertical-align: middle;
     }
+
+    /* =========================================
+       TỌA ĐỘ X/Y - CHỈNH Ở KHU VỰC NÀY
+       =========================================
+
+       label-x / label-y: tọa độ chữ nhãn.
+       control-x / control-y: tọa độ input, select.
+       button-x / button-y: tọa độ nút.
+
+       X dương = sang phải.
+       X âm = sang trái.
+       Y dương = xuống dưới.
+       Y âm = lên trên.
+
+       Đơn vị: px.
+       ========================================= */
+
+
+/* Khung tọa độ */
+.bar {
+  position: relative;
+  display: block;
+  min-height: 700px;
+}
+
+/* 1. Chọn ảnh */
+#files {
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+
+/* 2. Nút tự tìm */
+#autoAll {
+  position: absolute;
+  left: 300px;
+  top: 0px;
+  white-space: nowrap;
+  width: max-content;
+  max-width: none;
+  flex-shrink: 0;
+}
+
+/* 3. Nhóm xử lý bao nhiêu ảnh */
+#labelConcurrency {
+  position: absolute;
+  left: 0px;
+  top: 10px;
+}
+
+#textConcurrency {
+  position: absolute;
+  left: 0px;
+  top: 50px;
+  white-space: nowrap;
+}
+
+#concurrency {
+  position: absolute;
+  left: 0px;
+  top: 75px;
+}
+
+/* 4. Nhóm hiệu ứng */
+#labelEffect {
+  position: absolute;
+  left: 0px;
+  top: 10px;
+}
+
+#textEffect {
+  position: absolute;
+  left: 0px;
+  top: 125px;
+  white-space: nowrap;
+}
+
+#effect {
+  position: absolute;
+  left: 0px;
+  top: 155px;
+}
+
+/* 5. Nhóm mức độ */
+#labelStrength {
+  position: absolute;
+  left: 110px;
+  top: -65px;
+}
+
+#textStrength {
+  position: absolute;
+  left: 0px;
+  top: 200px;
+  white-space: nowrap;
+}
+
+#strength {
+  position: absolute;
+  left: 0px;
+  top: 225px;
+}
+
+/* 6. Nhóm chữ che vùng */
+#labelCoverText {
+  position: absolute;
+  left: 0px;
+  top: -50px;
+}
+
+#textCoverText {
+  position: absolute;
+  left: 0px;
+  top: 275px;
+  white-space: nowrap;
+}
+
+#coverText {
+  position: absolute;
+  left: 0px;
+  top: 300px;
+}
+
+/* 7. Nhóm watermark */
+#labelWatermark {
+  position: absolute;
+  left: 0px;
+  top: -50px;
+}
+
+#textWatermark {
+  position: absolute;
+  left: 0px;
+  top: 350px;
+  white-space: nowrap;
+}
+
+#watermarkText {
+  position: absolute;
+  left: 0px;
+  top: 375px;
+}
+
+/* 8. Nhóm cỡ watermark */
+#labelWatermarkSize {
+  position: absolute;
+  left: 220px;
+  top: -125px;
+}
+
+#textWatermarkSize {
+  position: absolute;
+  left: 0px;
+  top: 425px;
+  white-space: nowrap;
+}
+
+#watermarkSize {
+  position: absolute;
+  left: 0px;
+  top: 450px;
+}
+
+/* 9. Nút tải ZIP */
+#zipAll {
+  position: absolute;
+  left: 0px;
+  top: 400px;
+  white-space: nowrap;
+  width: max-content;
+}
+
+/* 10. Nút xóa danh sách */
+#clearAll {
+  position: absolute;
+  left: 150px;
+  top: 400px;
+  white-space: nowrap;
+  width: max-content;
+}
+
+/* 11. Chữ trạng thái */
+#status {
+  position: relative;
+  left: 10px;
+  top: -150px;
+}
+
+/* 12. Chữ hướng dẫn */
+#helpText {
+  position: relative;
+  left: 10px;
+  top: -150px;
+}
+
   </style>
 </head>
 
 <body>
   <main>
     <h1>
-      Roblox Trading Hider
-      <span class="ver">VER 1.5</span>
+      Life tool (hiden user)
+      <span class="ver">VER 1.6</span>
     </h1>
 
     <p>Chọn ảnh, tìm chữ Trading with và làm mờ toàn bộ dải ngang.</p>
@@ -119,8 +319,24 @@
         Tự tìm và che tất cả
       </button>
 
-      <label>
-        Hiệu ứng
+      <label id="labelConcurrency">
+        <span id="textConcurrency">
+          Xử lý bao nhiêu ảnh trong 1 lần (máy yếu vui lòng để xử lý ở mức thấp)
+        </span>
+        <select id="concurrency">
+          <option value="1">1</option>
+          <option value="3" selected>3</option>
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="all">Tất cả</option>
+        </select>
+      </label>
+
+      <label id="labelEffect">
+        <span id="textEffect">Hiệu ứng</span>
         <select id="effect">
           <option value="blur">Làm mờ</option>
           <option value="black">Che đen</option>
@@ -129,23 +345,23 @@
         </select>
       </label>
 
-      <label>
-        Mức
+      <label id="labelStrength">
+        <span id="textStrength">Mức độ</span>
         <input id="strength" type="range" min="4" max="50" value="18">
       </label>
 
-      <label>
-        Chữ che vùng
-        <input id="coverText" type="text" placeholder="Nhập chữ che vùng" style="min-width:160px">
+      <label id="labelCoverText">
+        <span id="textCoverText">Chữ che vùng</span>
+        <input id="coverText" type="text" placeholder="Cần bật hiệu ứng chữ" style="min-width:160px">
       </label>
 
-      <label>
-        Watermark
+      <label id="labelWatermark">
+        <span id="textWatermark">Watermark</span>
         <input id="watermarkText" type="text" placeholder="Nhập chữ watermark" style="min-width:160px">
       </label>
 
-      <label>
-        Cỡ watermark
+      <label id="labelWatermarkSize">
+        <span id="textWatermarkSize">Cỡ watermark</span>
         <input id="watermarkSize" type="range" min="10" max="80" value="28">
       </label>
 
@@ -156,8 +372,8 @@
     <div id="status">Chưa chọn ảnh.</div>
     <div id="gallery"></div>
 
-    <p class="small">
-      VER 1.5 · OCR cần Internet để tải thư viện lần đầu.
+    <p id="helpText" class="small">
+      Cần ảnh có chữ "Tradding with" bên trong nếu không sẽ không hoạt động.
       Ảnh được xử lý ngay trong trình duyệt.
     </p>
   </main>
@@ -166,4 +382,5 @@
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="app.js"></script>
 </body>
+
 </html>
