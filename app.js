@@ -25,11 +25,11 @@
     throw new Error('Không tải được Tesseract.js. Kiểm tra index.html và Internet.');
   }
 
-  return await Tesseract.createWorker('eng', 1, {
-    workerPath: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/worker.min.js',
+return await Tesseract.createWorker('eng', 1, {
+    workerPath: 'tesseract-assets/worker.min.js',
     corePath:   'https://cdn.jsdelivr.net/npm/tesseract.js-core@v5.0.0/',
     langPath:   'https://tessdata.projectnaptha.com/4.0.0',
-    workerBlobURL: false,
+    workerBlobURL: true,
     logger: m => {
       if (m.status) {
         say('OCR: ' + m.status +
@@ -37,7 +37,7 @@
       }
     },
     errorHandler: err => console.error('Tesseract Worker:', err)
-  });
+});
   }
 
   // Tạo ảnh đã che
