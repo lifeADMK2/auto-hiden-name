@@ -11,6 +11,7 @@
 
   const fx = () => $('effect')?.value || 'blur';
   const strength = () => +($('strength')?.value || 12);
+  const watermarkSize = () => +($('watermarkSize')?.value || 28);
 
   function controls() {
     if ($('autoAll')) $('autoAll').disabled = busy || !items.length;
@@ -43,15 +44,17 @@ return await Tesseract.createWorker('eng', 1, {
   function drawWatermark(ctx, canvasW, canvasH, text) {
     if (!text) return;
 
+    const size = watermarkSize();
+
     ctx.save();
-    ctx.font = '600 28px sans-serif';
+    ctx.font = `600 ${size}px sans-serif`;
     ctx.fillStyle = 'rgba(255,255,255,0.35)';
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'center';
 
     const angle = -25 * Math.PI / 180;
-    const stepX = 220;
-    const stepY = 110;
+    const stepX = size * 8;
+    const stepY = size * 4;
 
     ctx.translate(canvasW / 2, canvasH / 2);
     ctx.rotate(angle);
@@ -105,6 +108,27 @@ return await Tesseract.createWorker('eng', 1, {
           x, y, w, h
         );
         ctx.imageSmoothingEnabled = true;
+      } else if (r.effect === 'text') {
+        ctx.save();
+        ctx.fillStyle = '#000';
+        ctx.fillRect(x, y, w, h);
+
+        const label = r.text || $('coverText')?.value.trim() || '';
+        if (label) {
+          let fontSize = Math.max(10, Math.min(h * 0.6, 60));
+          ctx.font = `600 ${fontSize}px sans-serif`;
+
+          while (ctx.measureText(label).width > w - 10 && fontSize > 8) {
+            fontSize -= 2;
+            ctx.font = `600 ${fontSize}px sans-serif`;
+          }
+
+          ctx.fillStyle = '#fff';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(label, x + w / 2, y + h / 2);
+        }
+        ctx.restore();
       } else {
         const pad = Math.max(8, r.strength * 2);
         const left = Math.max(0, x - pad);
@@ -315,6 +339,7 @@ return await Tesseract.createWorker('eng', 1, {
         h: bottom - y,
         effect: fx(),
         strength: strength(),
+        text: $('coverText')?.value.trim() || '',
         auto: true
       });
 
@@ -492,7 +517,8 @@ return await Tesseract.createWorker('eng', 1, {
       it.regions.push({
         ...selected,
         effect: fx(),
-        strength: strength()
+        strength: strength(),
+        text: $('coverText')?.value.trim() || ''
       });
 
       redraw(it);
@@ -562,6 +588,10 @@ return await Tesseract.createWorker('eng', 1, {
   };
 
   $('watermarkText')?.addEventListener('input', () => {
+    items.forEach(redraw);
+  });
+
+  $('watermarkSize')?.addEventListener('input', () => {
     items.forEach(redraw);
   });
 
