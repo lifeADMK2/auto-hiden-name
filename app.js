@@ -1,4 +1,3 @@
-
 (() => {
   const $ = id => document.getElementById(id);
   const gallery = $('gallery');
@@ -38,6 +37,34 @@ return await Tesseract.createWorker('eng', 1, {
     },
     errorHandler: err => console.error('Tesseract Worker:', err)
 });
+  }
+
+  // Vẽ watermark lặp khắp ảnh, nghiêng chéo
+  function drawWatermark(ctx, canvasW, canvasH, text) {
+    if (!text) return;
+
+    ctx.save();
+    ctx.font = '600 28px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+
+    const angle = -25 * Math.PI / 180;
+    const stepX = 220;
+    const stepY = 110;
+
+    ctx.translate(canvasW / 2, canvasH / 2);
+    ctx.rotate(angle);
+
+    const diag = Math.sqrt(canvasW * canvasW + canvasH * canvasH);
+
+    for (let y = -diag; y < diag; y += stepY) {
+      for (let x = -diag; x < diag; x += stepX) {
+        ctx.fillText(text, x, y);
+      }
+    }
+
+    ctx.restore();
   }
 
   // Tạo ảnh đã che
@@ -100,6 +127,8 @@ return await Tesseract.createWorker('eng', 1, {
         ctx.drawImage(patch, left, top);
       }
     }
+
+    drawWatermark(ctx, c.width, c.height, $('watermarkText')?.value.trim());
 
     return c;
   }
@@ -531,6 +560,10 @@ return await Tesseract.createWorker('eng', 1, {
     say('Đã xóa danh sách ảnh.');
     controls();
   };
+
+  $('watermarkText')?.addEventListener('input', () => {
+    items.forEach(redraw);
+  });
 
   controls();
 })();
